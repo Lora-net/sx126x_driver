@@ -167,7 +167,7 @@ typedef enum sx126x_commands_size_e
     // RF Modulation and Packet-Related Functions
     SX126X_SIZE_SET_RF_FREQUENCY           = 5,
     SX126X_SIZE_SET_PKT_TYPE               = 2,
-    SX126X_SIZE_GET_PKT_TYPE               = 3,
+    SX126X_SIZE_GET_PKT_TYPE               = 2,
     SX126X_SIZE_SET_TX_PARAMS              = 3,
     SX126X_SIZE_SET_MODULATION_PARAMS_GFSK = 9,
     SX126X_SIZE_SET_MODULATION_PARAMS_LORA = 5,
