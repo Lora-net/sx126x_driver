@@ -1,7 +1,7 @@
 /**
- * @file      sx126x_hal.h
+ * @file      lr_fhss_v1_base_types.h
  *
- * @brief     Hardware Abstraction Layer for SX126x
+ * @brief     Radio-independent LR-FHSS base type definitions, version 1
  *
  * The Clear BSD License
  * Copyright Semtech Corporation 2021. All rights reserved.
@@ -32,12 +32,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SX126X_HAL_H
-#define SX126X_HAL_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ifndef LR_FHSS_V1_BASE_TYPES_H__
+#define LR_FHSS_V1_BASE_TYPES_H__
 
 /*
  * -----------------------------------------------------------------------------
@@ -57,85 +53,75 @@ extern "C" {
  * --- PUBLIC CONSTANTS --------------------------------------------------------
  */
 
-/**
- * @brief Write this to SPI bus while reading data, or as a dummy/placeholder
- */
-#define SX126X_NOP ( 0x00 )
-
 /*
  * -----------------------------------------------------------------------------
  * --- PUBLIC TYPES ------------------------------------------------------------
  */
 
-typedef enum sx126x_hal_status_e
+/**
+ * @brief LR-FHSS modulation type
+ */
+typedef enum lr_fhss_v1_modulation_type_e
 {
-    SX126X_HAL_STATUS_OK    = 0,
-    SX126X_HAL_STATUS_ERROR = 3,
-} sx126x_hal_status_t;
+    LR_FHSS_V1_MODULATION_TYPE_GMSK_488 = 0,
+} lr_fhss_v1_modulation_type_t;
+
+/**
+ * @brief LR-FHSS coding rate
+ */
+typedef enum lr_fhss_v1_cr_e
+{
+    LR_FHSS_V1_CR_5_6 = 0x00,
+    LR_FHSS_V1_CR_2_3 = 0x01,
+    LR_FHSS_V1_CR_1_2 = 0x02,
+    LR_FHSS_V1_CR_1_3 = 0x03,
+} lr_fhss_v1_cr_t;
+
+/**
+ * @brief LR-FHSS grid
+ */
+typedef enum lr_fhss_v1_grid_e
+{
+    LR_FHSS_V1_GRID_25391_HZ = 0x00,
+    LR_FHSS_V1_GRID_3906_HZ  = 0x01,
+} lr_fhss_v1_grid_t;
+
+/**
+ * @brief LR-FHSS bandwidth
+ */
+typedef enum lr_fhss_v1_bw_e
+{
+    LR_FHSS_V1_BW_39063_HZ   = 0x00,
+    LR_FHSS_V1_BW_85938_HZ   = 0x01,
+    LR_FHSS_V1_BW_136719_HZ  = 0x02,
+    LR_FHSS_V1_BW_183594_HZ  = 0x03,
+    LR_FHSS_V1_BW_335938_HZ  = 0x04,
+    LR_FHSS_V1_BW_386719_HZ  = 0x05,
+    LR_FHSS_V1_BW_722656_HZ  = 0x06,
+    LR_FHSS_V1_BW_773438_HZ  = 0x07,
+    LR_FHSS_V1_BW_1523438_HZ = 0x08,
+    LR_FHSS_V1_BW_1574219_HZ = 0x09,
+} lr_fhss_v1_bw_t;
+
+/**
+ * @brief LR-FHSS parameter structure
+ */
+typedef struct lr_fhss_v1_params_s
+{
+    const uint8_t*               sync_word; /**< 4-byte sync word */
+    lr_fhss_v1_modulation_type_t modulation_type;
+    lr_fhss_v1_cr_t              cr;
+    lr_fhss_v1_grid_t            grid;
+    lr_fhss_v1_bw_t              bw;
+    bool                         enable_hopping;
+    uint8_t                      header_count; /**< Number of header blocks */
+} lr_fhss_v1_params_t;
 
 /*
  * -----------------------------------------------------------------------------
  * --- PUBLIC FUNCTIONS PROTOTYPES ---------------------------------------------
  */
 
-/**
- * Radio data transfer - write
- *
- * @remark Shall be implemented by the user
- *
- * @param [in] context          Radio implementation parameters
- * @param [in] command          Pointer to the buffer to be transmitted
- * @param [in] command_length   Buffer size to be transmitted
- * @param [in] data             Pointer to the buffer to be transmitted
- * @param [in] data_length      Buffer size to be transmitted
- *
- * @returns Operation status
- */
-sx126x_hal_status_t sx126x_hal_write( const void* context, const uint8_t* command, const uint16_t command_length,
-                                      const uint8_t* data, const uint16_t data_length );
-
-/**
- * Radio data transfer - read
- *
- * @remark Shall be implemented by the user
- *
- * @param [in] context          Radio implementation parameters
- * @param [in] command          Pointer to the buffer to be transmitted
- * @param [in] command_length   Buffer size to be transmitted
- * @param [in] data             Pointer to the buffer to be received
- * @param [in] data_length      Buffer size to be received
- *
- * @returns Operation status
- */
-sx126x_hal_status_t sx126x_hal_read( const void* context, const uint8_t* command, const uint16_t command_length,
-                                     uint8_t* data, const uint16_t data_length );
-
-/**
- * Reset the radio
- *
- * @remark Shall be implemented by the user
- *
- * @param [in] context Radio implementation parameters
- *
- * @returns Operation status
- */
-sx126x_hal_status_t sx126x_hal_reset( const void* context );
-
-/**
- * Wake the radio up.
- *
- * @remark Shall be implemented by the user
- *
- * @param [in] context Radio implementation parameters
- *
- * @returns Operation status
- */
-sx126x_hal_status_t sx126x_hal_wakeup( const void* context );
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif  // SX126X_HAL_H
+#endif  // LR_FHSS_V1_BASE_TYPES_H__
 
 /* --- EOF ------------------------------------------------------------------ */

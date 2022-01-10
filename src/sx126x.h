@@ -3,11 +3,12 @@
  *
  * @brief     SX126x radio driver definition
  *
- * Revised BSD License
- * Copyright Semtech Corporation 2020. All rights reserved.
+ * The Clear BSD License
+ * Copyright Semtech Corporation 2021. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
+ * modification, are permitted (subject to the limitations in the disclaimer
+ * below) provided that the following conditions are met:
  *     * Redistributions of source code must retain the above copyright
  *       notice, this list of conditions and the following disclaimer.
  *     * Redistributions in binary form must reproduce the above copyright
@@ -17,16 +18,18 @@
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL SEMTECH CORPORATION BE LIABLE FOR ANY
- * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY
+ * THIS LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
+ * CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT
+ * NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SEMTECH CORPORATION BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef SX126X_H
@@ -55,13 +58,13 @@ extern "C" {
  */
 
 /**
- * @brief Maximum value for parameter timeout_in_rtc_step in both functions \ref sx126x_set_rx_with_timeout_in_rtc_step
- * and \ref sx126x_set_tx_with_timeout_in_rtc_step
+ * @brief Maximum value for parameter timeout_in_rtc_step in both functions @ref sx126x_set_rx_with_timeout_in_rtc_step
+ * and @ref sx126x_set_tx_with_timeout_in_rtc_step
  */
 #define SX126X_MAX_TIMEOUT_IN_RTC_STEP 0x00FFFFFE
 
 /**
- * @brief  Maximum value for parameter timeout_in_ms in both functions \ref sx126x_set_rx and \ref sx126x_set_tx
+ * @brief  Maximum value for parameter timeout_in_ms in both functions @ref sx126x_set_rx and @ref sx126x_set_tx
  */
 #define SX126X_MAX_TIMEOUT_IN_MS ( SX126X_MAX_TIMEOUT_IN_RTC_STEP / 64 )
 
@@ -72,9 +75,36 @@ extern "C" {
 #define SX126X_RX_SINGLE_MODE 0x00000000
 
 /**
- * @brief Timeout parameter in \ref sx126x_set_rx_with_timeout_in_rtc_step to launch a continuous reception
+ * @brief Timeout parameter in @ref sx126x_set_rx_with_timeout_in_rtc_step to launch a continuous reception
  */
 #define SX126X_RX_CONTINUOUS 0x00FFFFFF
+
+/**
+ * @brief Over-current protection default value after @ref sx126x_set_pa_cfg is called with @ref device_sel set to 1
+ */
+#define SX126X_OCP_PARAM_VALUE_60_MA 0x18
+
+/**
+ * @brief Over-current protection default value after @ref sx126x_set_pa_cfg is called with @ref device_sel set to 0
+ */
+#define SX126X_OCP_PARAM_VALUE_140_MA 0x38
+
+/**
+ * @brief  Maximum value for parameter nb_of_symbs in @ref sx126x_set_lora_symb_nb_timeout
+ */
+#define SX126X_MAX_LORA_SYMB_NUM_TIMEOUT 248
+
+/**
+ * @brief Maximum number of register that can be added to the retention list
+ */
+#define SX126X_MAX_NB_REG_IN_RETENTION 4
+
+/*!
+ * @brief Frequency step in MHz used to compute the image calibration parameter
+ *
+ * @see sx126x_cal_img_in_mhz
+ */
+#define SX126X_IMAGE_CALIBRATION_STEP_IN_MHZ 4
 
 #define SX126X_CHIP_MODES_POS ( 4U )
 #define SX126X_CHIP_MODES_MASK ( 0x07UL << SX126X_CHIP_MODES_POS )
@@ -182,9 +212,11 @@ enum sx126x_irq_masks_e
     SX126X_IRQ_CAD_DONE          = ( 1 << 7 ),
     SX126X_IRQ_CAD_DETECTED      = ( 1 << 8 ),
     SX126X_IRQ_TIMEOUT           = ( 1 << 9 ),
+    SX126X_IRQ_LR_FHSS_HOP       = ( 1 << 14 ),
     SX126X_IRQ_ALL               = SX126X_IRQ_TX_DONE | SX126X_IRQ_RX_DONE | SX126X_IRQ_PREAMBLE_DETECTED |
                      SX126X_IRQ_SYNC_WORD_VALID | SX126X_IRQ_HEADER_VALID | SX126X_IRQ_HEADER_ERROR |
-                     SX126X_IRQ_CRC_ERROR | SX126X_IRQ_CAD_DONE | SX126X_IRQ_CAD_DETECTED | SX126X_IRQ_TIMEOUT,
+                     SX126X_IRQ_CRC_ERROR | SX126X_IRQ_CAD_DONE | SX126X_IRQ_CAD_DETECTED | SX126X_IRQ_TIMEOUT |
+                     SX126X_IRQ_LR_FHSS_HOP,
 };
 
 typedef uint16_t sx126x_irq_mask_t;
@@ -227,8 +259,9 @@ typedef enum sx126x_tcxo_ctrl_voltages_e
  */
 typedef enum sx126x_pkt_types_e
 {
-    SX126X_PKT_TYPE_GFSK = 0x00,
-    SX126X_PKT_TYPE_LORA = 0x01,
+    SX126X_PKT_TYPE_GFSK    = 0x00,
+    SX126X_PKT_TYPE_LORA    = 0x01,
+    SX126X_PKT_TYPE_LR_FHSS = 0x03,
 } sx126x_pkt_type_t;
 
 /**
@@ -385,7 +418,7 @@ typedef enum sx126x_gfsk_pkt_len_modes_e
 /**
  * @brief SX126X GFSK CRC type enumeration definition
  */
-typedef enum sx16x_gfsk_crc_types_e
+typedef enum sx126x_gfsk_crc_types_e
 {
     SX126X_GFSK_CRC_OFF         = 0x01,
     SX126X_GFSK_CRC_1_BYTE      = 0x00,
@@ -602,7 +635,7 @@ typedef uint16_t sx126x_errors_mask_t;
 /**
  * @brief Set the chip in sleep mode
  *
- * @param [in]  context Chip implementation context.
+ * @param [in]  context Chip implementation context
  * @param [in]  cfg Sleep mode configuration
  *
  * @returns Operation status
@@ -612,7 +645,7 @@ sx126x_status_t sx126x_set_sleep( const void* context, const sx126x_sleep_cfgs_t
 /**
  * @brief Set the chip in stand-by mode
  *
- * @param [in]  context Chip implementation context.
+ * @param [in]  context Chip implementation context
  * @param [in]  cfg Stand-by mode configuration
  *
  * @returns Operation status
@@ -622,7 +655,7 @@ sx126x_status_t sx126x_set_standby( const void* context, const sx126x_standby_cf
 /**
  * @brief Set the chip in frequency synthesis mode
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  *
  * @returns Operation status
  */
@@ -639,7 +672,7 @@ sx126x_status_t sx126x_set_fs( const void* context );
  *
  * @remark If the timeout argument is 0, then no timeout is used.
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [in] timeout_in_ms The timeout configuration in millisecond for Tx operation
  *
  * @returns Operation status
@@ -662,7 +695,7 @@ sx126x_status_t sx126x_set_tx( const void* context, const uint32_t timeout_in_ms
  *
  * @remark If the timeout argument is 0, then no timeout is used.
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [in] timeout_in_rtc_step The timeout configuration for Tx operation
  *
  * @returns Operation status
@@ -684,7 +717,7 @@ sx126x_status_t sx126x_set_tx_with_timeout_in_rtc_step( const void* context, con
  * | ----------------------| --------------------------------------------------------------------------------------|
  * | SX126X_RX_SINGLE_MODE | Single: the chip stays in RX mode until a reception occurs, then switch to standby RC |
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [in] timeout_in_ms The timeout configuration in millisecond for Rx operation
  *
  * @returns Operation status
@@ -712,7 +745,7 @@ sx126x_status_t sx126x_set_rx( const void* context, const uint32_t timeout_in_ms
  * | SX126X_RX_SINGLE_MODE | Single: the chip stays in RX mode until a reception occurs, then switch to standby RC |
  * | SX126X_RX_CONTINUOUS  | Continuous: the chip stays in RX mode even after reception of a packet                |
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [in] timeout_in_rtc_step The timeout configuration for Rx operation
  *
  * @returns Operation status
@@ -726,8 +759,8 @@ sx126x_status_t sx126x_set_rx_with_timeout_in_rtc_step( const void* context, con
  *   - Syncword / Header detection (default)
  *   - Preamble detection
  *
- * @param [in] context Chip implementation context.
- * @param [in] enable If true, the timer stops on Syncword / Header detection.
+ * @param [in] context Chip implementation context
+ * @param [in] enable If true, the timer stops on Syncword / Header detection
  *
  * @returns Operation status
  */
@@ -736,7 +769,7 @@ sx126x_status_t sx126x_stop_timer_on_preamble( const void* context, const bool e
 /**
  * @brief Set the chip in reception mode with duty cycling
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [in] rx_time_in_ms The timeout of Rx period - in millisecond
  * @param [in] sleep_time_in_ms The length of sleep period - in millisecond
  *
@@ -756,7 +789,7 @@ sx126x_status_t sx126x_set_rx_duty_cycle( const void* context, const uint32_t rx
  *
  * @remark Maximal timeout value is 0xFFFFFF (i.e. 511 seconds).
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [in] rx_time The timeout of Rx period
  * @param [in] sleep_time The length of sleep period
  *
@@ -773,7 +806,7 @@ sx126x_status_t sx126x_set_rx_duty_cycle_with_timings_in_rtc_step( const void*  
  *
  * @remark The fallback mode is configured with @ref sx126x_set_cad_params.
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  *
  * @returns Operation status
  */
@@ -784,7 +817,7 @@ sx126x_status_t sx126x_set_cad( const void* context );
  *
  * @remark The packet type shall be configured with @ref sx126x_set_pkt_type before using this command.
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  *
  * @returns Operation status
  */
@@ -795,7 +828,7 @@ sx126x_status_t sx126x_set_tx_cw( const void* context );
  *
  * @remark The packet type shall be configured with @ref sx126x_set_pkt_type before using this command.
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  *
  * @returns Operation status
  */
@@ -807,8 +840,8 @@ sx126x_status_t sx126x_set_tx_infinite_preamble( const void* context );
  * @remark This function shall be called to set the correct regulator mode, depending on the usage of LDO or DC/DC on
  * the PCB implementation.
  *
- * @param [in] context Chip implementation context.
- * @param [in] mode Regulator mode configuration.
+ * @param [in] context Chip implementation context
+ * @param [in] mode Regulator mode configuration
  *
  * @returns Operation status
  */
@@ -822,7 +855,7 @@ sx126x_status_t sx126x_set_reg_mode( const void* context, const sx126x_reg_mod_t
  * @remark The chip will return to stand-by RC mode on exit. Potential calibration issues can be read out with @ref
  * sx126x_get_device_errors command.
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [in] param Mask holding the blocks to be calibrated
  *
  * @returns Operation status
@@ -830,22 +863,37 @@ sx126x_status_t sx126x_set_reg_mode( const void* context, const sx126x_reg_mod_t
 sx126x_status_t sx126x_cal( const void* context, const sx126x_cal_mask_t param );
 
 /**
- * @brief Perform device operating frequency band image rejection calibration
+ * @brief Launch an image calibration valid for all frequencies inside an interval, in steps
  *
- * @param [in] context Chip implementation context.
- * @param [in] freq_in_hz Frequency in Hz used for the image calibration
+ * @param [in] context Chip implementation context
+ * @param [in] freq1 Image calibration interval lower bound, in steps
+ * @param [in] freq2 Image calibration interval upper bound, in steps
+ *
+ * @remark freq1 must be less than or equal to freq2
  *
  * @returns Operation status
  */
-sx126x_status_t sx126x_cal_img( const void* context, const uint32_t freq_in_hz );
+sx126x_status_t sx126x_cal_img( const void* context, const uint8_t freq1, const uint8_t freq2 );
+
+/**
+ * @brief Launch an image calibration valid for all frequencies inside an interval, in MHz
+ *
+ * @param [in] context Chip implementation context
+ * @param [in] freq1_in_mhz Image calibration interval lower bound, in MHz
+ * @param [in] freq2_in_mhz Image calibration interval upper bound, in MHz
+ *
+ * @remark freq1_in_mhz must be less than or equal to freq2_in_mhz
+ *
+ * @returns Operation status
+ */
+sx126x_status_t sx126x_cal_img_in_mhz( const void* context, const uint16_t freq1_in_mhz, const uint16_t freq2_in_mhz );
 
 /**
  * @brief Configure the PA (Power Amplifier)
  *
- * @details This command is used to differentiate the SX1261 from the SX1262 / SX1268. When using this command, the user
- * selects the PA to be used by the device as well as its configuration.
+ * @remark The parameters depend on the chip being used
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [in] params Power amplifier configuration parameters
  *
  * @returns Operation status
@@ -857,7 +905,7 @@ sx126x_status_t sx126x_set_pa_cfg( const void* context, const sx126x_pa_cfg_para
  *
  * @remark This setting is not taken into account during Rx Duty Cycle mode or Auto TxRx.
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [in] fallback_mode Selected fallback mode
  *
  * @returns Operation status
@@ -871,10 +919,12 @@ sx126x_status_t sx126x_set_rx_tx_fallback_mode( const void* context, const sx126
 /**
  * @brief Write data into register memory space.
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [in] address The register memory address to start writing operation
- * @param [in] buffer The buffer of bytes to write into memory.
+ * @param [in] buffer The buffer of bytes to write into memory
  * @param [in] size Number of bytes to write into memory, starting from address
+ *
+ * @returns Operation status
  *
  * @see sx126x_read_register
  */
@@ -884,10 +934,12 @@ sx126x_status_t sx126x_write_register( const void* context, const uint16_t addre
 /**
  * @brief Read data from register memory space.
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [in] address The register memory address to start reading operation
  * @param [in] buffer The buffer of bytes to be filled with data from registers
  * @param [in] size Number of bytes to read from memory, starting from address
+ *
+ * @returns Operation status
  *
  * @see sx126x_write_register
  */
@@ -897,7 +949,7 @@ sx126x_status_t sx126x_read_register( const void* context, const uint16_t addres
 /**
  * @brief Write data into radio Tx buffer memory space.
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [in] offset Start address in the Tx buffer of the chip
  * @param [in] buffer The buffer of bytes to write into radio buffer
  * @param [in] size The number of bytes to write into Tx radio buffer
@@ -912,7 +964,7 @@ sx126x_status_t sx126x_write_buffer( const void* context, const uint8_t offset, 
 /**
  * @brief Read data from radio Rx buffer memory space.
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [in] offset Start address in the Rx buffer of the chip
  * @param [in] buffer The buffer of bytes to be filled with content from Rx radio buffer
  * @param [in] size The number of bytes to read from the Rx radio buffer
@@ -940,7 +992,7 @@ sx126x_status_t sx126x_read_buffer( const void* context, const uint8_t offset, u
  * @remark DIO2 and DIO3 are shared with other features. See @ref sx126x_set_dio2_as_rf_sw_ctrl and @ref
  * sx126x_set_dio3_as_tcxo_ctrl
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [in] irq_mask Variable that holds the system interrupt mask
  * @param [in] dio1_mask Variable that holds the interrupt mask for dio1
  * @param [in] dio2_mask Variable that holds the interrupt mask for dio2
@@ -956,7 +1008,7 @@ sx126x_status_t sx126x_set_dio_irq_params( const void* context, const uint16_t i
 /**
  * @brief Get system interrupt status
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [out] irq Pointer to a variable for holding the system interrupt status
  *
  * @returns Operation status
@@ -968,7 +1020,7 @@ sx126x_status_t sx126x_get_irq_status( const void* context, sx126x_irq_mask_t* i
 /**
  * @brief Clear selected system interrupts
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [in] irq_mask Variable that holds the system interrupt to be cleared
  *
  * @returns Operation status
@@ -981,8 +1033,8 @@ sx126x_status_t sx126x_clear_irq_status( const void* context, const sx126x_irq_m
  * @brief Clears any radio irq status flags that are set and returns the flags that
  * were cleared.
  *
- * @param [in] context Chip implementation context.
- * @param [out] irq Pointer to a variable for holding the system interrupt status. Can be NULL.
+ * @param [in] context Chip implementation context
+ * @param [out] irq Pointer to a variable for holding the system interrupt status; can be NULL
  *
  * @returns Operation status
  */
@@ -991,7 +1043,7 @@ sx126x_status_t sx126x_get_and_clear_irq_status( const void* context, sx126x_irq
 /**
  * @brief Configure the embedded RF switch control
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [in] enable Enable this feature if set to true
  *
  * @returns Operation status
@@ -1005,9 +1057,9 @@ sx126x_status_t sx126x_set_dio2_as_rf_sw_ctrl( const void* context, const bool e
  *
  * @remark The chip will wait for the timeout to happen before starting any operation that requires the TCXO.
  *
- * @param [in] context Chip implementation context.
- * @param [in] tcxo_voltage Voltage used to power the TCXO.
- * @param [in] timeout Time needed for the TCXO to be stable.
+ * @param [in] context Chip implementation context
+ * @param [in] tcxo_voltage Voltage used to power the TCXO
+ * @param [in] timeout Time needed for the TCXO to be stable
  *
  * @returns Operation status
  *
@@ -1024,7 +1076,7 @@ sx126x_status_t sx126x_set_dio3_as_tcxo_ctrl( const void* context, const sx126x_
  *
  * @remark This commands shall be called only after a packet type is selected.
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [in] freq_in_hz The frequency in Hz to set for radio operations
  *
  * @returns Operation status
@@ -1036,7 +1088,7 @@ sx126x_status_t sx126x_set_rf_freq( const void* context, const uint32_t freq_in_
  *
  * @remark This commands shall be called only after a packet type is selected.
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [in] freq The frequency in PLL steps to set for radio operations
  *
  * @returns Operation status
@@ -1046,7 +1098,7 @@ sx126x_status_t sx126x_set_rf_freq_in_pll_steps( const void* context, const uint
 /**
  * @brief Set the packet type
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  *
  * @param [in] pkt_type Packet type to set
  *
@@ -1057,7 +1109,7 @@ sx126x_status_t sx126x_set_pkt_type( const void* context, const sx126x_pkt_type_
 /**
  * @brief Get the current packet type
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [out] pkt_type Pointer to a variable holding the packet type
  *
  * @returns Operation status
@@ -1067,7 +1119,7 @@ sx126x_status_t sx126x_get_pkt_type( const void* context, sx126x_pkt_type_t* pkt
 /**
  * @brief Set the parameters for TX power and power amplifier ramp time
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [in] pwr_in_dbm The Tx output power in dBm
  * @param [in] ramp_time The ramping time configuration for the PA
  *
@@ -1082,7 +1134,7 @@ sx126x_status_t sx126x_set_tx_params( const void* context, const int8_t pwr_in_d
  * @remark The command @ref sx126x_set_pkt_type must be called prior to this
  * one.
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [in] params The structure of GFSK modulation configuration
  *
  * @returns Operation status
@@ -1094,7 +1146,7 @@ sx126x_status_t sx126x_set_gfsk_mod_params( const void* context, const sx126x_mo
  *
  * @remark The command @ref sx126x_set_pkt_type must be called prior to this one.
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [in] params The structure of LoRa modulation configuration
  *
  * @returns Operation status
@@ -1107,7 +1159,7 @@ sx126x_status_t sx126x_set_lora_mod_params( const void* context, const sx126x_mo
  * @remark The command @ref sx126x_set_pkt_type must be called prior to this
  * one.
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [in] params The structure of GFSK packet configuration
  *
  * @returns Operation status
@@ -1119,7 +1171,7 @@ sx126x_status_t sx126x_set_gfsk_pkt_params( const void* context, const sx126x_pk
  *
  * @remark The command @ref sx126x_set_pkt_type must be called prior to this one.
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [in] params The structure of LoRa packet configuration
  *
  * @returns Operation status
@@ -1131,7 +1183,7 @@ sx126x_status_t sx126x_set_lora_pkt_params( const void* context, const sx126x_pk
  *
  * @remark The command @ref sx126x_set_pkt_type must be called prior to this one.
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [in] params The structure of CAD configuration
  *
  * @returns Operation status
@@ -1141,7 +1193,7 @@ sx126x_status_t sx126x_set_cad_params( const void* context, const sx126x_cad_par
 /**
  * @brief Set buffer start addresses for both Tx and Rx operations
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [in] tx_base_address The start address used for Tx operations
  * @param [in] rx_base_address The start address used for Rx operations
  *
@@ -1150,6 +1202,17 @@ sx126x_status_t sx126x_set_cad_params( const void* context, const sx126x_cad_par
 sx126x_status_t sx126x_set_buffer_base_address( const void* context, const uint8_t tx_base_address,
                                                 const uint8_t rx_base_address );
 
+/**
+ * @brief Set the timeout to be used when the chip is configured in Rx mode (only in LoRa)
+ *
+ * @remark The maximum timeout is \ref SX126X_MAX_LORA_SYMB_NUM_TIMEOUT
+ * @remark The function is disabled if the timeout is set to 0
+ *
+ * @param [in] context Chip implementation context
+ * @param [in] nb_of_symbs Timeout in number of symbol
+ *
+ * @returns Operation status
+ */
 sx126x_status_t sx126x_set_lora_symb_nb_timeout( const void* context, const uint8_t nb_of_symbs );
 
 //
@@ -1159,7 +1222,7 @@ sx126x_status_t sx126x_set_lora_symb_nb_timeout( const void* context, const uint
 /**
  * @brief Get the chip status
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [out] radio_status Pointer to a structure holding the radio status
  *
  * @returns Operation status
@@ -1172,7 +1235,7 @@ sx126x_status_t sx126x_get_status( const void* context, sx126x_chip_status_t* ra
  * @details This function is used to get the length of the received payload and the start address to be used when
  * reading data from the Rx buffer.
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [out] rx_buffer_status Pointer to a structure to store the current status
  *
  * @returns Operation status
@@ -1182,7 +1245,7 @@ sx126x_status_t sx126x_get_rx_buffer_status( const void* context, sx126x_rx_buff
 /**
  * @brief Get the status of the last GFSK packet received
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [out] pkt_status Pointer to a structure to store the packet status
  *
  * @returns Operation status
@@ -1192,7 +1255,7 @@ sx126x_status_t sx126x_get_gfsk_pkt_status( const void* context, sx126x_pkt_stat
 /**
  * @brief Get the status of the last LoRa packet received
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [out] pkt_status Pointer to a structure to store the packet status
  *
  * @returns Operation status
@@ -1204,7 +1267,7 @@ sx126x_status_t sx126x_get_lora_pkt_status( const void* context, sx126x_pkt_stat
  *
  * @remark This function shall be called when in Rx mode.
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [out] rssi_in_dbm Pointer to a variable to store the RSSI value in dBm
  *
  * @returns Operation status
@@ -1216,7 +1279,7 @@ sx126x_status_t sx126x_get_rssi_inst( const void* context, int16_t* rssi_in_dbm 
 /**
  * @brief Get the statistics about GFSK communication
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [out] stats Pointer to a structure to store GFSK-related statistics
  *
  * @returns Operation status
@@ -1226,7 +1289,7 @@ sx126x_status_t sx126x_get_gfsk_stats( const void* context, sx126x_stats_gfsk_t*
 /**
  * @brief Get the statistics about LoRa communication
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [out] stats Pointer to a structure to store LoRa-related statistics
  *
  * @returns Operation status
@@ -1236,7 +1299,7 @@ sx126x_status_t sx126x_get_lora_stats( const void* context, sx126x_stats_lora_t*
 /**
  * @brief Reset all the statistics for both Lora and GFSK communications
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  *
  * @returns Operation status
  */
@@ -1249,7 +1312,7 @@ sx126x_status_t sx126x_reset_stats( const void* context );
 /**
  * @brief Perform a hard reset of the chip
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  *
  * @returns Operation status
  */
@@ -1258,7 +1321,7 @@ sx126x_status_t sx126x_reset( const void* context );
 /**
  * @brief Wake the radio up from sleep mode.
  *
- * @param [in]  context Chip implementation context.
+ * @param [in]  context Chip implementation context
  *
  * @returns Operation status
  */
@@ -1267,7 +1330,7 @@ sx126x_status_t sx126x_wakeup( const void* context );
 /**
  * @brief Get the list of all active errors
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [out] errors Pointer to a variable to store the error list
  *
  * @returns Operation status
@@ -1277,7 +1340,7 @@ sx126x_status_t sx126x_get_device_errors( const void* context, sx126x_errors_mas
 /**
  * @brief Clear all active errors
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  *
  * @returns Operation status
  */
@@ -1355,9 +1418,9 @@ uint32_t sx126x_get_gfsk_time_on_air_in_ms( const sx126x_pkt_params_gfsk_t* pkt_
  * @remark A valid packet type must have been configured with @ref sx126x_set_pkt_type
  *         before using this command.
  *
- * @param [in]  context Chip implementation context.
- * @param [out] numbers Array where numbers will be stored.
- * @param [in]  n Number of desired random numbers.
+ * @param [in]  context Chip implementation context
+ * @param [out] numbers Array where numbers will be stored
+ * @param [in]  n Number of desired random numbers
  *
  * @returns Operation status
  *
@@ -1399,7 +1462,7 @@ uint32_t sx126x_convert_timeout_in_ms_to_rtc_step( uint32_t timeout_in_ms );
  * @remark This configuration is not kept in the retention memory. Rx boosted mode shall be enabled each time the chip
  * leaves sleep mode.
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [in] state Boost mode activation
  *
  * @returns Operation status
@@ -1409,7 +1472,7 @@ sx126x_status_t sx126x_cfg_rx_boosted( const void* context, const bool state );
 /**
  * @brief Configure the sync word used in GFSK packet
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [in] sync_word Buffer holding the sync word to be configured
  * @param [in] sync_word_len Sync word length in byte
  *
@@ -1424,7 +1487,7 @@ sx126x_status_t sx126x_set_gfsk_sync_word( const void* context, const uint8_t* s
  *   - 0x12 for a private LoRaWAN network (default)
  *   - 0x34 for a public LoRaWAN network
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [in] sync_word Sync word to be configured
  *
  * @returns Operation status
@@ -1434,7 +1497,7 @@ sx126x_status_t sx126x_set_lora_sync_word( const void* context, const uint8_t sy
 /**
  * @brief Configure the seed used to compute CRC in GFSK packet
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [in] seed Seed value used to compute the CRC value
  *
  * @returns Operation status
@@ -1444,7 +1507,7 @@ sx126x_status_t sx126x_set_gfsk_crc_seed( const void* context, uint16_t seed );
 /**
  * @brief Configure the polynomial used to compute CRC in GFSK packet
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [in] polynomial Polynomial value used to compute the CRC value
  *
  * @returns Operation status
@@ -1454,7 +1517,7 @@ sx126x_status_t sx126x_set_gfsk_crc_polynomial( const void* context, const uint1
 /**
  * @brief Configure the whitening seed used in GFSK packet
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [in] seed Seed value used in data whitening
  *
  * @returns Operation status
@@ -1464,11 +1527,11 @@ sx126x_status_t sx126x_set_gfsk_whitening_seed( const void* context, const uint1
 /**
  * @brief Configure the Tx PA clamp
  *
- * @remark Workaround - On the SX1262, during the chip initialization, calling this function optimize the PA clamping
- * threshold. The call must be done after a Power On Reset, or a wake-up from cold Start.(see DS_SX1261-2_V1.2 datasheet
+ * @remark Workaround - With a SX1262, during the chip initialization, calling this function optimizes the PA clamping
+ * threshold. The call must be done after a Power On Reset or a wake-up from cold start (see DS_SX1261-2_V1.2 datasheet
  * chapter 15.2)
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  *
  * @returns Operation status
  */
@@ -1480,7 +1543,7 @@ sx126x_status_t sx126x_cfg_tx_clamp( const void* context );
  * @remark Workaround - It is advised to call this function after ANY reception with timeout active sequence, which
  * stop the RTC and clear the timeout event, if any (see DS_SX1261-2_V1.2 datasheet chapter 15.4)
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  *
  * @returns Operation status
  */
@@ -1491,7 +1554,7 @@ sx126x_status_t sx126x_stop_rtc( const void* context );
  *
  * @remark The maximum value that can be configured is 63 (i.e. 157.5 mA)
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [in] ocp_in_step_of_2_5_ma OCP value given in steps of 2.5 mA
  *
  * @returns Operation status
@@ -1504,7 +1567,7 @@ sx126x_status_t sx126x_set_ocp_value( const void* context, const uint8_t ocp_in_
  * @remark The device is fitted with internal programmable capacitors connected independently to the pins XTA and XTB of
  * the device. Each capacitor can be controlled independently in steps of 0.47 pF added to the minimal value 11.3pF.
  *
- * @param [in] context Chip implementation context.
+ * @param [in] context Chip implementation context
  * @param [in] trimming_cap_xta Value for the trimming capacitor connected to XTA pin
  * @param [in] trimming_cap_xtb Value for the trimming capacitor connected to XTB pin
  *
@@ -1512,6 +1575,54 @@ sx126x_status_t sx126x_set_ocp_value( const void* context, const uint8_t ocp_in_
  */
 sx126x_status_t sx126x_set_trimming_capacitor_values( const void* context, const uint8_t trimming_cap_xta,
                                                       const uint8_t trimming_cap_xtb );
+
+/**
+ * @brief Add registers to the retention list
+ *
+ * @remark Up to 4 registers can be added to the retention list
+ * @remark This function actually appends registers to the list until it is full
+ * @remark Registers already added to the list cannot be removed unless the chip goes in sleep mode without retention or
+ * a reset is issued
+ *
+ * @param [in] context Chip implementation context
+ * @param [in] register_address The array with addresses of the register to be kept in retention
+ * @param [in] register_nb The number of register to be kept in retention
+ *
+ * @returns Operation status
+ */
+sx126x_status_t sx126x_add_registers_to_retention_list( const void* context, const uint16_t* register_addr,
+                                                        uint8_t register_nb );
+
+/**
+ * @brief Add SX126X_REG_RXGAIN, SX126X_REG_TX_MODULATION and SX126X_REG_IQ_POLARITY registers to the retention list
+ *
+ * @remark These registers are used in workarounds implemented in this driver
+ * @remark This function adds 3 registers out of the 4 available slots to the retention list
+ * @remark It is recommended to call this function once during initialization phase if the application requires the chip
+ * to enter sleep mode without retention
+ *
+ * @param [in] context Chip implementation context
+ *
+ * @returns Operation status
+ *
+ * @see sx126x_add_registers_to_retention_list
+ */
+sx126x_status_t sx126x_init_retention_list( const void* context );
+
+/**
+ * @brief Get LoRa coding rate and CRC configurations from received header
+ *
+ * @remark The output of this function is only valid if the field header_type of pkt_params is equal to @ref
+ * SX126X_LORA_PKT_EXPLICIT when calling @ref sx126x_set_lora_pkt_params()
+ * @remark The values for cr and crc_is_on are extracted from the header of the received LoRa packet
+ *
+ * @param [in]  context    Chip implementation context
+ * @param [out] cr         LoRa coding rate
+ * @param [out] crc_is_on  LoRa CRC configuration
+ *
+ * @returns Operation status
+ */
+sx126x_status_t sx126x_get_lora_params_from_header( const void* context, sx126x_lora_cr_t* cr, bool* crc_is_on );
 
 #ifdef __cplusplus
 }
