@@ -614,13 +614,14 @@ STATIC void lr_fhss_payload_whitening( const uint8_t* data_in, uint16_t data_in_
 {
     uint8_t lfsr = 0xFF;
 
-    for( uint8_t index = 0; index < data_in_bytecount; index++ )
+    for( uint16_t index = 0; index < data_in_bytecount; index++ )
     {
         uint8_t u       = data_in[index] ^ lfsr;
         data_out[index] = ( ( u & 0x0F ) << 4 ) | ( ( u & 0xF0 ) >> 4 );
         lfsr =
-            ( lfsr << 1 ) | ( ( ( lfsr & 0x80 ) >> 7 ) ^
-                              ( ( ( lfsr & 0x20 ) >> 5 ) ^ ( ( ( lfsr & 0x10 ) >> 4 ) ^ ( ( lfsr & 0x8 ) >> 3 ) ) ) );
+            ( uint8_t ) ( ( lfsr << 1 ) |
+                          ( ( ( lfsr & 0x80 ) >> 7 ) ^
+                            ( ( ( lfsr & 0x20 ) >> 5 ) ^ ( ( ( lfsr & 0x10 ) >> 4 ) ^ ( ( lfsr & 0x8 ) >> 3 ) ) ) ) );
     }
 }
 
@@ -671,7 +672,6 @@ STATIC uint16_t lr_fhss_convolution_encode_viterbi_1_2_base( uint8_t* encod_stat
     {
         *data_out++ = ( uint8_t ) ( bin_out_16 >> 8 );
         *data_out++ = ( uint8_t ) bin_out_16;
-        bin_out_16  = 0;
     }
 
     return data_out_bitcount;
@@ -706,7 +706,6 @@ STATIC uint16_t lr_fhss_convolution_encode_viterbi_1_3_base( uint8_t* encod_stat
         *data_out++ = ( uint8_t ) ( bin_out_32 >> 16 );
         *data_out++ = ( uint8_t ) ( bin_out_32 >> 8 );
         *data_out++ = ( uint8_t ) bin_out_32;
-        bin_out_32  = 0;
     }
 
     return data_out_bitcount;

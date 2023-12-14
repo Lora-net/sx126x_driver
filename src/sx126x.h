@@ -135,6 +135,30 @@ extern "C" {
 #define SX126X_GFSK_RX_STATUS_ADRS_ERROR_POS ( 5U )
 #define SX126X_GFSK_RX_STATUS_ADRS_ERROR_MASK ( 0x01UL << SX126X_GFSK_RX_STATUS_ADRS_ERROR_POS )
 
+/*!
+ * \brief Ramp-up delay for the power amplifier
+ *
+ * This parameter configures the delay to fine tune the ramp-up time of the power amplifier for BPSK operation.
+ */
+enum
+{
+    SX126X_SIGFOX_DBPSK_RAMP_UP_TIME_DEFAULT = 0x0000,  //!< No optimization
+    SX126X_SIGFOX_DBPSK_RAMP_UP_TIME_100_BPS = 0x370F,  //!< Ramp-up optimization for 100bps
+    SX126X_SIGFOX_DBPSK_RAMP_UP_TIME_600_BPS = 0x092F,  //!< Ramp-up optimization for 600bps
+};
+
+/*!
+ * \brief Ramp-down delay for the power amplifier
+ *
+ * This parameter configures the delay to fine tune the ramp-down time of the power amplifier for BPSK operation.
+ */
+enum
+{
+    SX126X_SIGFOX_DBPSK_RAMP_DOWN_TIME_DEFAULT = 0x0000,  //!< No optimization
+    SX126X_SIGFOX_DBPSK_RAMP_DOWN_TIME_100_BPS = 0x1D70,  //!< Ramp-down optimization for 100bps
+    SX126X_SIGFOX_DBPSK_RAMP_DOWN_TIME_600_BPS = 0x04E1,  //!< Ramp-down optimization for 600bps
+};
+
 /*
  * -----------------------------------------------------------------------------
  * --- PUBLIC TYPES ------------------------------------------------------------
@@ -266,6 +290,7 @@ typedef enum sx126x_pkt_types_e
 {
     SX126X_PKT_TYPE_GFSK    = 0x00,
     SX126X_PKT_TYPE_LORA    = 0x01,
+    SX126X_PKT_TYPE_BPSK    = 0x02,
     SX126X_PKT_TYPE_LR_FHSS = 0x03,
 } sx126x_pkt_type_t;
 
@@ -295,6 +320,14 @@ typedef enum sx126x_gfsk_pulse_shape_e
     SX126X_GFSK_PULSE_SHAPE_BT_07 = 0x0A,
     SX126X_GFSK_PULSE_SHAPE_BT_1  = 0x0B,
 } sx126x_gfsk_pulse_shape_t;
+
+/**
+ * @brief SX126X BPSK modulation shaping enumeration definition
+ */
+typedef enum
+{
+    SX126X_DBPSK_PULSE_SHAPE = 0x16,  //!< Double OSR / RRC / BT 0.7
+} sx126x_bpsk_pulse_shape_t;
 
 /**
  * @brief SX126X GFSK Rx bandwidth enumeration definition
@@ -334,6 +367,15 @@ typedef struct sx126x_mod_params_gfsk_s
     sx126x_gfsk_pulse_shape_t pulse_shape;
     sx126x_gfsk_bw_t          bw_dsb_param;
 } sx126x_mod_params_gfsk_t;
+
+/**
+ * @brief Modulation configuration for BPSK packet
+ */
+typedef struct sx126x_mod_params_bpsk_s
+{
+    uint32_t                  br_in_bps;    //!< BPSK bitrate [bit/s]
+    sx126x_bpsk_pulse_shape_t pulse_shape;  //!< BPSK pulse shape
+} sx126x_mod_params_bpsk_t;
 
 /**
  * @brief SX126X LoRa spreading factor enumeration definition
@@ -476,6 +518,18 @@ typedef struct sx126x_pkt_params_gfsk_s
     sx126x_gfsk_crc_types_t         crc_type;               //!< CRC type configuration
     sx126x_gfsk_dc_free_t           dc_free;                //!< Whitening configuration
 } sx126x_pkt_params_gfsk_t;
+
+/**
+ * @brief SX126X BPSK packet parameters structure definition
+ */
+typedef struct sx126x_pkt_params_bpsk_s
+{
+    uint8_t  pld_len_in_bytes;  //!< Payload length [bytes]
+    uint16_t ramp_up_delay;     //!< Delay to fine tune ramp-up time, if non-zero
+    uint16_t ramp_down_delay;   //!< Delay to fine tune ramp-down time, if non-zero
+    uint16_t pld_len_in_bits;   //!< If non-zero, used to ramp down PA before end of a payload with length that is not a
+                                //!< multiple of 8
+} sx126x_pkt_params_bpsk_t;
 
 /**
  * @brief SX126X LoRa CAD number of symbols enumeration definition
@@ -1151,6 +1205,19 @@ sx126x_status_t sx126x_set_tx_params( const void* context, const int8_t pwr_in_d
 sx126x_status_t sx126x_set_gfsk_mod_params( const void* context, const sx126x_mod_params_gfsk_t* params );
 
 /**
+ * @brief Set the modulation parameters for BPSK packets
+ *
+ * @remark The command @ref sx126x_set_pkt_type must be called prior to this
+ * one.
+ *
+ * @param [in] context Chip implementation context
+ * @param [in] params The structure of BPSK modulation configuration
+ *
+ * @returns Operation status
+ */
+sx126x_status_t sx126x_set_bpsk_mod_params( const void* context, const sx126x_mod_params_bpsk_t* params );
+
+/**
  * @brief Set the modulation parameters for LoRa packets
  *
  * @remark The command @ref sx126x_set_pkt_type must be called prior to this one.
@@ -1174,6 +1241,19 @@ sx126x_status_t sx126x_set_lora_mod_params( const void* context, const sx126x_mo
  * @returns Operation status
  */
 sx126x_status_t sx126x_set_gfsk_pkt_params( const void* context, const sx126x_pkt_params_gfsk_t* params );
+
+/**
+ * @brief Set the packet parameters for BPSK packets
+ *
+ * @remark The command @ref sx126x_set_pkt_type must be called prior to this
+ * one.
+ *
+ * @param [in] context Chip implementation context
+ * @param [in] params The structure of BPSK packet configuration
+ *
+ * @returns Operation status
+ */
+sx126x_status_t sx126x_set_bpsk_pkt_params( const void* context, const sx126x_pkt_params_bpsk_t* params );
 
 /**
  * @brief Set the packet parameters for LoRa packets

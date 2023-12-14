@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.2] - 2023-12-15
+
+### Changed
+- `sx126x_set_gfsk_sync_word()` function - Remove memcpy usage
+
+## [2.3.1] - 2023-11-8
+
+### Fixed
+- `lr_fhss_payload_whitening()` function - Cast missing on lfsr parameter
+
+## [2.3.0] - 2023-10-10
+
+### Added
+- `sx126x_set_bpsk_mod_params()` function - Set the modulation parameters for BPSK packets
+- `sx126x_set_bpsk_pkt_params()` function - Set the packet parameters for BPSK packets
+
 ## [2.2.0] - 2023-03-27
 
 ### Added
